@@ -1,4 +1,4 @@
 package com.webservice.week05.dto;
 
-public class ProductResponse {
+public record ProductResponse(String name, String count, int price, int day) {
 }
