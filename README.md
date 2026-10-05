@@ -45,8 +45,8 @@ cd assign05-c01-22500802
 
 ## 요청·응답 JSON 예시
 
-실제로 앱을 실행해 `curl`로 받은 결과임. 
-
+실제로 앱을 실행해 `curl`로 받은 결과. 
+-> 
 등록 `POST /api/products`
 
 ```json
@@ -76,6 +76,8 @@ cd assign05-c01-22500802
 ## GitHub / 배포 URL
 
 - GitHub: https://github.com/2026-2-WebService/assign05-c01-22500802
+- 배포용 GitHub: https://github.com/yechan-7942/2026_WEB_week5 (과제 저장소가 private이라 같은 코드를 개인 저장소에 올려 배포함)
+- 배포 URL: https://two026-web-week5-1.onrender.com/api/products
 
 ---
 
@@ -86,7 +88,7 @@ cd assign05-c01-22500802
 - Spring Boot: 3.5.5
 - Build Tool: Gradle 9.6.0 (Wrapper)
 - 데이터 저장: `LinkedHashMap<String, Product>` (`MemoryProductRepository`)
-- 배포 환경: `TODO`
+- 배포 환경: Render (Docker 기반 Web Service)
 
 ## Dependency
 
@@ -168,9 +170,50 @@ ProductService의 findAll()에서 repository.findAll()로 가져온 목록을 st
 # 배포 과정 요약
 
 - 빌드·배포 순서:
+  1. 변경 사항을 커밋하고 과제 저장소(`origin`)에 push함.
+  2. 과제 저장소가 private이라 Render의 Public Git Repository로는 연결되지 않았음(`Repository not found`). 그래서 개인 저장소(`yechan-7942/2026_WEB_week5`)를 `mine`이라는 remote로 추가해 같은 코드를 push함.
+  3. Render에서 New → Web Service를 만들고 개인 저장소를 연결함. Language는 Docker, Branch는 `main`, Instance Type은 Free로 설정함.
+  4. Render가 `Dockerfile`로 이미지를 빌드해 실행함. 약 2분 만에 `Deploy succeeded`가 되었고 `https://two026-web-week5-1.onrender.com`이 생김.
 - 추가·수정한 파일·설정:
+  - `Dockerfile` 추가: Render는 Java를 바로 실행해 주지 않아서 Docker로 배포함. 1단계에서 `gradle bootJar`로 jar를 만들고, 2단계에서 JRE 17 이미지에 jar만 복사해 `java -jar`로 실행함.
+  - `application.properties`: `server.port=8080`을 `server.port=${PORT:8080}`으로 바꿈. Render가 `PORT` 환경변수로 포트를 정해 주기 때문임. `PORT`가 없으면 8080으로 떠서 로컬 실행은 그대로임. `PORT=9090 java -jar`로 실행해 9090 포트로 뜨는 것을 확인함.
 - 발생한 문제와 해결:
-- 배포 URL로 확인한 요청과 응답:
+  - 첫 배포가 `Exited with status 1`로 실패함. 로그에 `Using Node.js version`과 `Running build command 'yarn'`이 찍혀 있었음. 서비스가 Node 환경으로 만들어져 Java 프로젝트가 빌드되지 않은 것이 원인이었음. Language를 Docker로 선택한 새 Web Service를 만들어 해결함.
+  - 과제 저장소를 Public Git Repository로 연결하려 하니 `Repository not found`가 나옴. `gh repo view`로 확인하니 저장소가 private이었음. 개인 저장소에 같은 코드를 push해 연결함.
+  - 화면 아래에 `$7 / month`가 표시되어 유료 인스턴스가 선택된 것을 알게 됨. Instance Type을 Free로 바꾼 뒤 배포함.
+- 배포 URL로 확인한 요청과 응답: `https://two026-web-week5-1.onrender.com`에 `curl`로 요청해 확인함. 첫 요청은 무료 인스턴스가 깨어나는 동안 느릴 수 있음.
+
+  `GET /api/products` (등록 전)
+
+  ```json
+  // 200 OK
+  []
+  ```
+
+  `POST /api/products`
+
+  ```json
+  { "name": "우유", "category": "유제품", "count": "2개", "price": 3000, "day": 7 }
+  ```
+  ```json
+  // 201 Created
+  { "id": "b0c3fda4-95a6-4535-990b-cd3bc86671e6", "name": "우유", "category": "유제품", "count": "2개", "price": 3000, "day": 7 }
+  ```
+
+  STEP 5 기능 테스트 (배포 URL에서 실행)
+
+  - A. 잘못된 입력: `POST /api/products`에 `{"name":"","category":"유제품","count":"1개","price":-1,"day":5}`를 보내면 `400 Bad Request`가 반환됨.
+  - B. 이름 검색: `우유`와 `초코우유`를 등록한 뒤 `GET /api/products?name=우유`를 호출하면 두 상품이 모두 반환됨.
+
+  ```json
+  // 200 OK
+  [
+    { "id": "b0c3fda4-95a6-4535-990b-cd3bc86671e6", "name": "우유", "category": "유제품", "count": "2개", "price": 3000, "day": 7 },
+    { "id": "cb24fd74-beac-4d03-97b6-bb10febc34cd", "name": "초코우유", "category": "유제품", "count": "1개", "price": 1500, "day": 5 }
+  ]
+  ```
+
+참고: 이 프로젝트는 메모리에 저장하므로 Render 서버가 재시작되거나 무료 플랜에서 잠들었다 깨면 등록한 데이터가 사라짐.
 
 ---
 
@@ -205,12 +248,11 @@ public List<ProductResponse> findAll(String name) {
 
 ## AI Usage
 
-- 질문한 내용: 
-- 참고한 답변: README 구조와 코드 기반 설명 초안에 AI(Claude Code)를 사용함.
-- 직접 확인·수정한 부분: 앱을 실행해 `curl`로 각 endpoint, 검증, 검색 응답을 확인함. `TODO: 본인이 확인·수정한 내용 추가`
+- 질문한 내용: `record` DTO에 어떤 필드를 적어야 하는지, 요청 DTO에 `id`가 필요 없는 이유, `Map`을 저장소로 쓰는 것이 적절한지, `ProductService`의 컴파일 오류 원인, validation으로 400을 반환하는 방법, Render 배포에 필요한 설정을 질문함.
+- 참고한 답변: README 구조와 코드 기반 설명 초안, `Dockerfile`과 `PORT` 설정 방법에 AI(Claude Code)를 사용함.
+- 직접 확인·수정한 부분: `ProductResponse`를 직접 작성하고 `ProductController`와 `ProductService`의 일부를 직접 고침. 앱을 실행해 `curl`로 각 endpoint, 검증, 검색 응답을 확인함. AI가 제안한 `id` 타입은 기존 `Product`의 `String`에 맞춰 통일함.
 
 ## Reflection
 
-
-#
+이번 과제로 Controller, Service, Repository가 각각 어떤 일을 맡는지 알게 됨. 특히 Service가 `ProductRepository` 인터페이스에만 의존해서, 저장 방식이 바뀌어도 Service는 그대로 둘 수 있다는 점이 인상 깊었음. 처음에는 `id` 타입이 `String`과 `int`로 섞여 있어서 조회가 항상 실패할 뻔했는데, 타입을 맞추는 일이 생각보다 중요하다는 것을 배움. 검증은 `if`문을 직접 쓰지 않아도 어노테이션 몇 개로 처리되어서 코드가 훨씬 간단했음. 아쉬운 점은 데이터가 메모리에만 있어서 서버를 재시작하면 모두 사라진다는 것이고, 다음에는 DB를 연결해 보고 싶음.
 
