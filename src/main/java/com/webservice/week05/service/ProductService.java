@@ -23,8 +23,11 @@ public class ProductService {
         return ProductResponse.from(repository.save(product));
     }
 
-    public List<ProductResponse> findAll() {
-        return repository.findAll().stream().map(ProductResponse::from).toList();
+    public List<ProductResponse> findAll(String name) {
+        return repository.findAll().stream()
+                .filter(product -> name == null || product.getName().toLowerCase().contains(name.toLowerCase()))
+                .map(ProductResponse::from)
+                .toList();
     }
 
     public ProductResponse findById(String id) {
