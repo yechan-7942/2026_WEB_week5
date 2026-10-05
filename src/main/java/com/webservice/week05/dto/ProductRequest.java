@@ -1,10 +1,13 @@
 package com.webservice.week05.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
+
 public record ProductRequest(
-        String name,
-        String category,
-        String count,
-        int price,
-        int day
+        @NotBlank String name,
+        @NotBlank String category,
+        @NotBlank String count,
+        @PositiveOrZero int price,
+        @PositiveOrZero int day
 ) {
 }

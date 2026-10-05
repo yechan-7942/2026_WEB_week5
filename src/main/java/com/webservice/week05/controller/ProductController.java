@@ -3,6 +3,7 @@ package com.webservice.week05.controller;
 import com.webservice.week05.dto.ProductRequest;
 import com.webservice.week05.dto.ProductResponse;
 import com.webservice.week05.service.ProductService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(@RequestBody ProductRequest productRequest) {
+    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest productRequest) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(productRequest));
     }
 
@@ -34,7 +35,7 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ProductResponse update(@PathVariable String id, @RequestBody ProductRequest productRequest) {
+    public ProductResponse update(@PathVariable String id, @Valid @RequestBody ProductRequest productRequest) {
         return productService.update(id, productRequest);
     }
 
