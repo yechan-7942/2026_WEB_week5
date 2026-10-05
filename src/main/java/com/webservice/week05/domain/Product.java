@@ -3,15 +3,17 @@ package com.webservice.week05.domain;
 public class Product {
     private String id;
     private String name;
+    private String category;
     private String count;
     private int price;
     private int day;
 
     public Product() {
     }
-    public Product(String id, String name, String count, int price, int day) {
+    public Product(String id, String name, String category, String count, int price, int day) {
         this.id = id;
         this.name = name;
+        this.category = category;
         this.count = count;
         this.price = price;
         this.day = day;
@@ -23,6 +25,10 @@ public class Product {
 
     public String getName() {
         return name;
+    }
+
+    public String getCategory() {
+        return category;
     }
 
     public String getCount() {
@@ -43,6 +49,10 @@ public class Product {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
     }
 
     public void setCount(String count) {
